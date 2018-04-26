@@ -92,17 +92,17 @@
                 var pixel = firePixels[src];
                 if(pixel == 0) {
                     firePixels[src - FIRE_WIDTH] = 0;
-                    return;
+                } else {
+                    var randIdx = Math.round(Math.random() * 3.0) & 3;
+                    var dst = src - randIdx + 1;
+                    firePixels[dst - FIRE_WIDTH ] = pixel - (randIdx & 1);
                 }
-                var randIdx = Math.round(Math.random() * 3.0) & 3;
-                var dst = src - randIdx + 1;
-                firePixels[dst - FIRE_WIDTH ] = pixel - (randIdx & 1);
             }
             
             function doFire() {
                 var curSrc = FIRE_WIDTH;
                 for(x=0 ; x < FIRE_WIDTH; x++, curSrc = FIRE_WIDTH) {
-                    for (y = 1 ; y < FIRE_HEIGHT; y++) {
+                    for (y = 1; y < FIRE_HEIGHT; y++) {
                         spreadFire(curSrc + x);
                         curSrc += FIRE_WIDTH;
                     }
