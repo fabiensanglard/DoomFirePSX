@@ -88,27 +88,25 @@
 
             /***********************************************/
             /**************** MEAT STARTS HERE *************/
-            function spreadFire(src,  rand) {
+            function spreadFire(src) {
                 var pixel = firePixels[src];
                 if(pixel == 0) {
                     firePixels[src - FIRE_WIDTH] = 0;
-                    return rand;
+                    return;
                 }
                 var randIdx = Math.round(Math.random() * 3.0) & 3;
-                var dst = src - randIdx  + 1;
+                var dst = src - randIdx + 1;
                 firePixels[dst - FIRE_WIDTH ] = pixel - (randIdx & 1);
-                return rand;
             }
             
-            function doFire() {                
-                var rand = Math.round(Math.random() * 255.0) & 255;
+            function doFire() {
                 var curSrc = FIRE_WIDTH;
-                for(x=0 ; x < FIRE_WIDTH ; x++, curSrc = FIRE_WIDTH) {                    
-                    for (y = 1 ; y < FIRE_HEIGHT ; y++)  {  
-                            rand = spreadFire(curSrc + x, rand);
-                            curSrc += FIRE_WIDTH;
+                for(x=0 ; x < FIRE_WIDTH; x++, curSrc = FIRE_WIDTH) {
+                    for (y = 1 ; y < FIRE_HEIGHT; y++) {
+                        spreadFire(curSrc + x);
+                        curSrc += FIRE_WIDTH;
                     }
-                  }  
+                }
             }
             /***********************************************/
             /*************** MEAT ENDS HERE ****************/
