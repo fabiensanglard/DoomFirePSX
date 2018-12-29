@@ -56,24 +56,17 @@
                 0xFF,0xFF,0xFF
             ];
 
-            function start() {
-                stage = new createjs.Stage("mainCanvas");
-                createjs.Ticker.addEventListener("tick", hostFrame);
-                createjs.Ticker.setFPS(CJS_TICKER_FPS);
-                container = new createjs.Container();
-                stage.addChild(container);
-
-                // Populate pallete.
-                for(var i = 0; i < rgbs.length; i++) {
-                    palette[i] = {
-                        r : rgbs[i * 3 + 0], 
-                        g : rgbs[i * 3 + 1], 
-                        b : rgbs[i * 3 + 2] 
-                    }
+             // Populate pallete.
+            for(var i = 0; i < rgbs.length; i++) {
+                palette[i] = {
+                    r : rgbs[i * 3 + 0], 
+                    g : rgbs[i * 3 + 1], 
+                    b : rgbs[i * 3 + 2] 
                 }
-                
-                
-                
+            }
+
+            y_scrolling = 440;
+            function setup() {
                 // Set whole screen to 0 (color: 0x07,0x07,0x07)
                 for(var i = 0; i < FIRE_WIDTH*FIRE_HEIGHT; i++) {
                     firePixels[i] = 0;
@@ -83,6 +76,16 @@
                 for(var i = 0; i < FIRE_WIDTH; i++) {
                     firePixels[(FIRE_HEIGHT-1)*FIRE_WIDTH + i] = 36;
                 }
+                y_scrolling = 440;
+            }
+
+            function start() {
+                stage = new createjs.Stage("backbuffer");
+                createjs.Ticker.addEventListener("tick", hostFrame);
+                createjs.Ticker.setFPS(CJS_TICKER_FPS);
+                container = new createjs.Container();
+                stage.addChild(container);
+                setup();
             }
             
 
@@ -100,11 +103,9 @@
             }
             
             function doFire() {
-                var curSrc = FIRE_WIDTH;
-                for(x=0 ; x < FIRE_WIDTH; x++, curSrc = FIRE_WIDTH) {
+                for(x=0 ; x < FIRE_WIDTH; x++) {
                     for (y = 1; y < FIRE_HEIGHT; y++) {
-                        spreadFire(curSrc + x);
-                        curSrc += FIRE_WIDTH;
+                        spreadFire(y * FIRE_WIDTH + x);
                     }
                 }
             }
@@ -113,12 +114,12 @@
             /***********************************************/
 
             y_scrolling = 540;
-            function hostFrame(event) {
+            function hostFrame() {
 
                 // Update palette buffer
                 doFire();
                 
-                canvas = document.getElementById('mainCanvas')
+                canvas = document.getElementById('backbuffer')
                 color = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
                 
                 // Convert palette buffer to RGB and write it to ouput.
@@ -133,6 +134,7 @@
                         if (pixel.r == 0x07 && pixel.g == 0x07 && pixel.b == 0x07) {
                             color.data[((canvas.width * y) + x) * 4 + 3] = 0;
                         } else 
+                            // Black pixels need to be transparent to show DOOM logo
                             color.data[((canvas.width * y) + x) * 4 + 3] = 255;
                     }
                 }
@@ -140,15 +142,27 @@
                 
                 canvas.getContext("2d").putImageData(color, 0, 0);
                 
-                var shower = document.getElementById('shower');
-                shower.getContext("2d").fillStyle = 'black';
-                shower.getContext("2d").fillRect(0, 0, shower.width, shower.height);
-                shower.getContext("2d").imageSmoothingEnabled = false;
-                shower.getContext("2d").drawImage(document.getElementById('doom'), 50, y_scrolling,  (shower.width - 100) , shower.height/2);
-                shower.getContext("2d").drawImage(canvas,0,0, shower.width, shower.height);
-                if (y_scrolling != 50)
+                var frontbuffer = document.getElementById('frontbuffer');
+                frontbuffer.getContext("2d").fillStyle = 'black';
+                frontbuffer.getContext("2d").fillRect(0, 0, frontbuffer.width, frontbuffer.height);
+                frontbuffer.getContext("2d").imageSmoothingEnabled = false;
+                frontbuffer.getContext("2d").drawImage(document.getElementById('doom'), 50, y_scrolling,  (frontbuffer.width - 100) , frontbuffer.height/2);
+                frontbuffer.getContext("2d").drawImage(canvas,0,0, frontbuffer.width, frontbuffer.height);
+                if (y_scrolling != 70)
                     y_scrolling-=2;
-
+                else {
+                  // Stop fire
+                  for(var y = 167; y > 160; y--) {  
+                    for(var x = 0; x < canvas.width; x++) {
+                      if (firePixels[y * canvas.width + x] > 0)
+                        firePixels[y * canvas.width + x]-= Math.round(Math.random()) & 3;
+                      else {
+                        // Stop animation altogether
+                        //createjs.Ticker.setFPS(0);
+                      }
+                    }
+                  }  
+                }   
                 // Swap buffer
                 stage.update();
             }
@@ -157,7 +171,7 @@
     </head>
     
     <body onload="start();">
-        <canvas id="mainCanvas" width="320" height="168" style="border: 1px solid black;" hidden=true></canvas>
+        <canvas id="backbuffer" width="320" height="168" style="border: 1px solid black;" hidden=true></canvas>
         <img id='doom' src="doom.png" width="379" height="260" hidden=1/>
         <style>
         td {
@@ -173,13 +187,14 @@
        <table>
         <tr><td>
 
-        <canvas id="shower" width="640" height="509" style="border: 1px solid black;"></canvas>
+        <canvas id="frontbuffer" width="640" height="509" style="border: 1px solid black;"></canvas>
         </td>
          <td>
          <table width=40 border=1>
             <tr><td style="background-color: #070707">&nbsp;tabtabdssfsgsd</td></tr>
             <tr><td style="background-color: #1f0707">&nbsp;</td></tr>
             <tr><td style="background-color: #2f0f07">&nbsp;</td></tr>
+
             <tr><td style="background-color: #571707">&nbsp;</td></tr>
             <tr><td style="background-color: #671f07">&nbsp;</td></tr>
             <tr><td style="background-color: #771f07">&nbsp;</td></tr>
