@@ -58,13 +58,13 @@
             y_scrolling = 440;
             function setup() {
                 // Set whole screen to 0 (color: 0x07,0x07,0x07)
-                 for(var i = FIRE_WIDTH * FIRE_HEIGHT / 2; i < FIRE_WIDTH * FIRE_HEIGHT; ++i) {
+                for(var i = FIRE_WIDTH * FIRE_HEIGHT / 2; i < FIRE_WIDTH * FIRE_HEIGHT; ++i) {
                     firePixels[i] = 0;
                 }
                 
                 // Set bottom line to 37 (color white: 0xFF,0xFF,0xFF)
                 for(var i = 0; i < FIRE_WIDTH; ++i) {
-                    firePixels[(FIRE_HEIGHT - 1) * FIRE_WIDTH + i] = 36;
+                    firePixels[(FIRE_HEIGHT - 1) * FIRE_WIDTH + i] = (rgbs.length / 3) - 1;
                 }
                 y_scrolling = 440;
             }
