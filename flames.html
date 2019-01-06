@@ -8,15 +8,14 @@
         <script type="text/javascript">
             
             var CJS_TICKER_FPS =27;
-            var FIRE_WIDTH =  320;
-            var FIRE_HEIGHT = 168 
+            const FIRE_WIDTH =  320;
+            const FIRE_HEIGHT = 168 
     
             var palette = [];
-
             // Palette based framebuffer. Coordinate system origin upper-left.
-            var firePixels = [];
+            var firePixels = Array(FIRE_WIDTH * FIRE_WIDTH);
             
-            var rgbs = [
+            const rgbs = [
                 0x07,0x07,0x07,
                 0x1F,0x07,0x07,
                 0x2F,0x0F,0x07,
@@ -56,25 +55,16 @@
                 0xFF,0xFF,0xFF
             ];
 
-             // Populate pallete.
-            for(var i = 0; i < rgbs.length / 3; i++) {
-                palette[i] = {
-                    r : rgbs[i * 3 + 0], 
-                    g : rgbs[i * 3 + 1], 
-                    b : rgbs[i * 3 + 2] 
-                }
-            }
-
             y_scrolling = 440;
             function setup() {
                 // Set whole screen to 0 (color: 0x07,0x07,0x07)
-                for(var i = 0; i < FIRE_WIDTH*FIRE_HEIGHT; i++) {
+                 for(var i = FIRE_WIDTH * FIRE_HEIGHT / 2; i < FIRE_WIDTH * FIRE_HEIGHT; ++i) {
                     firePixels[i] = 0;
                 }
                 
                 // Set bottom line to 37 (color white: 0xFF,0xFF,0xFF)
-                for(var i = 0; i < FIRE_WIDTH; i++) {
-                    firePixels[(FIRE_HEIGHT-1)*FIRE_WIDTH + i] = 36;
+                for(var i = 0; i < FIRE_WIDTH; ++i) {
+                    firePixels[(FIRE_HEIGHT - 1) * FIRE_WIDTH + i] = 36;
                 }
                 y_scrolling = 440;
             }
@@ -92,19 +82,18 @@
             /***********************************************/
             /**************** MEAT STARTS HERE *************/
             function spreadFire(src) {
-                var pixel = firePixels[src];
-                if(pixel == 0) {
+                if(firePixels[src] == 0) {
                     firePixels[src - FIRE_WIDTH] = 0;
                 } else {
                     var randIdx = Math.round(Math.random() * 3.0) & 3;
                     var dst = src - randIdx + 1;
-                    firePixels[dst - FIRE_WIDTH ] = pixel - (randIdx & 1);
+                    firePixels[dst - FIRE_WIDTH ] = firePixels[src] - (randIdx & 1);
                 }
             }
             
             function doFire() {
-                for(x=0 ; x < FIRE_WIDTH; x++) {
-                    for (y = 1; y < FIRE_HEIGHT; y++) {
+                for(var x = 0 ; x < FIRE_WIDTH; ++x) {
+                    for (var y = 1; y < FIRE_HEIGHT; ++y) {
                         spreadFire(y * FIRE_WIDTH + x);
                     }
                 }
@@ -123,20 +112,16 @@
                 color = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
                 
                 // Convert palette buffer to RGB and write it to ouput.
-                for(var y = 0; y < canvas.height; y++) {
-                    for(var x = 0; x < canvas.width; x++) {
-                        var index = firePixels[y * canvas.width + x];
-                        var pixel = palette[index];
+                for(var i = 0; i < canvas.height * canvas.width; ++i) {
 
-                        color.data[((canvas.width * y) + x) * 4 + 0] = pixel.r;
-                        color.data[((canvas.width * y) + x) * 4 + 1] = pixel.g;
-                        color.data[((canvas.width * y) + x) * 4 + 2] = pixel.b;
-                        if (pixel.r == 0x07 && pixel.g == 0x07 && pixel.b == 0x07) {
-                            color.data[((canvas.width * y) + x) * 4 + 3] = 0;
+                        color.data[i * 4 + 0] = rgbs[firePixels[i] * 3];
+                        color.data[i * 4 + 1] = rgbs[firePixels[i] * 3 + 1];
+                        color.data[i * 4 + 2] = rgbs[firePixels[i] * 3 + 2];
+                        if (firePixels[i] == 0) {
+                            color.data[i * 4 + 3] = 0;
                         } else 
                             // Black pixels need to be transparent to show DOOM logo
-                            color.data[((canvas.width * y) + x) * 4 + 3] = 255;
-                    }
+                            color.data[i * 4 + 3] = 255;
                 }
 
                 
@@ -149,18 +134,13 @@
                 frontbuffer.getContext("2d").drawImage(document.getElementById('doom'), 50, y_scrolling,  (frontbuffer.width - 100) , frontbuffer.height/2);
                 frontbuffer.getContext("2d").drawImage(canvas,0,0, frontbuffer.width, frontbuffer.height);
                 if (y_scrolling != 70)
-                    y_scrolling-=2;
+                    y_scrolling -=2;
                 else {
                   // Stop fire
-                  for(var y = 167; y > 160; y--) {  
-                    for(var x = 0; x < canvas.width; x++) {
-                      if (firePixels[y * canvas.width + x] > 0)
-                        firePixels[y * canvas.width + x]-= Math.round(Math.random()) & 3;
-                      else {
-                        // Stop animation altogether
-                        //createjs.Ticker.setFPS(0);
+                  for(var y = FIRE_HEIGHT * canvas.width; y > (FIRE_HEIGHT - 8) * canvas.width; --y) {  
+                      if (firePixels[y] > 0) {
+                        firePixels[y] -= Math.round(Math.random()) & 3;
                       }
-                    }
                   }  
                 }   
                 // Swap buffer
