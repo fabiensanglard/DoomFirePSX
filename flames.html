@@ -96,7 +96,7 @@
                 if(pixel == 0) {
                     firePixels[src - FIRE_WIDTH] = 0;
                 } else {
-                    var randIdx = Math.round(Math.random() * 3.0) & 3;
+                    var randIdx = Math.round(Math.random() * 3.0);// & 3;
                     var dst = src - randIdx + 1;
                     firePixels[dst - FIRE_WIDTH ] = pixel - (randIdx & 1);
                 }
